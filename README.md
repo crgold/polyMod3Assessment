@@ -8,25 +8,69 @@ Compile the Multiplier2() circuit and verify it against a smart contract verifie
 ```
 pragma circom 2.0.0;
 
-/*This circuit template checks that c is the multiplication of a and b.*/  
+template CustomCircuit () {  
+    // signal inputs
+    signal input a;
+    signal input b;
 
-template Multiplier2 () {  
+    // signals from gates
+    signal x;
+    signal y;
 
-   // Declaration of signals.  
-   signal input a;  
-   signal input b;  
-   signal output c;  
+    // final signal output
+    signal output q;
 
-   // Constraints.  
-   c <== a * b;  
+    // component gates used to create custom circuit
+    component andGate = AND();
+    component notGate = NOT();
+    component orGate = OR();
+
+    // circuit logic
+    andGate.a <== a;
+    andGate.b <== b;
+    x <== andGate.out;
+
+    notGate.in <== b;
+    y <== notGate.out;
+
+    orGate.a <== x;
+    orGate.b <== y;
+    q <== orGate.out;
+
+    // logging the output
+    log("Output q", q);
 }
-component main = Multiplier2();
+
+template AND() {
+    signal input a;
+    signal input b;
+    signal output out;
+
+    out <== a*b;
+}
+
+template NOT() {
+    signal input in;
+    signal output out;
+
+    out <== 1 + in - 2*in;
+}
+
+template OR() {
+    signal input a;
+    signal input b;
+    signal output out;
+
+    out <== a + b - a*b;
+}
+
+component main = CustomCircuit();
 ```
 ### Install
 `npm i`
 
 ### Compile
-`npx hardhat compile` 
+`npx hardhat circom` 
 This will generate the **out** file with circuit intermediaries and geneate the **MultiplierVerifier.sol** contract
 
 ### Prove and Deploy
@@ -43,7 +87,7 @@ With two commands you can compile a ZKP, generate a proof, deploy a verifier, an
 ### Directory Structure
 **circuits**
 ```
-├── multiplier
+├── CustomCircuit
 │   ├── circuit.circom
 │   ├── input.json
 │   └── out
